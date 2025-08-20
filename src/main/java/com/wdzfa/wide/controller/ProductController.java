@@ -61,4 +61,22 @@ public class ProductController {
         return productService.update(request);
     }
 
+    @PutMapping("/add-stock")
+    public ResponseEntity<String> addStock(@RequestBody ProductRequest request){
+        return productService.addStock(request);
+    }
+
+    @GetMapping("/search/{size}/{page}/{type}/{sort}")
+    public Iterable<Product> searchCategory(@PathVariable("page") int page,
+                                            @PathVariable("size") int size,
+                                            @PathVariable("type") String type,
+                                            @PathVariable("sort") String sort){
+        return productService.findByType(page,size,type,sort);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id){
+        return productService.remove(id);
+    }
+
 }

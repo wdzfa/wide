@@ -56,9 +56,15 @@ public class OrderController {
         return orderService.placeOrder(id, checkedOut);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> removeCart(@PathVariable("id") Long id){
         return orderService.remove(id);
+    }
+
+    @PutMapping("/add/{id}/{stock}")
+    public ResponseEntity<String> addStock(@PathVariable("id") Long id,
+                                           @PathVariable("stock") int stock){
+        return orderService.addStock(id,stock);
     }
 
 }

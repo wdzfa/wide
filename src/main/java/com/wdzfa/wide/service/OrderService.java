@@ -78,40 +78,9 @@ public class OrderService {
             return ResponseEntity.badRequest().body(responseData);
         }
 
-        Optional<Cart> optionalCart = cartRepository.findCartByUserAndProduct(user, product);
-
         double totalCalculatedPrice = product.getPrice() * request.getQuantity();
 
         Cart cart;
-
-//        if (optionalCart.isPresent()) {
-//            cart = optionalCart.get();
-//
-//            // Check stock before updating
-//            int updateStock = cart.getQuantity() + request.getQuantity();
-//
-//            if (updateStock > product.getStock()) {
-//                responseData.setStatus(false);
-//                responseData.getMessage().add("Remaining stock:" + cart.getQuantity());
-//                return ResponseEntity.badRequest().body(responseData);
-//            }
-//
-//            // Update existing cart
-//            cart.setQuantity(cart.getQuantity() + request.getQuantity());
-//            cart.setTotalPrice(product.getPrice() * cart.getQuantity());
-//            cart.setOrderDate(LocalDateTime.now());
-//
-//        } else {
-//            // Create new cart
-//            cart = new Cart();
-//            cart.setUser(user);
-//            cart.setProduct(product);
-//            cart.setQuantity(request.getQuantity());
-//            cart.setTotalPrice(totalCalculatedPrice);
-//            cart.setOrderDate(LocalDateTime.now());
-//            cart.setPlaceOrder("false");
-//        }
-
         cart = new Cart();
         cart.setUser(user);
         cart.setProduct(product);
@@ -186,5 +155,13 @@ public class OrderService {
     public ResponseEntity<String> remove(Long id) {
         cartRepository.deleteById(id);
         return new ResponseEntity<>("Cart Removed", HttpStatus.OK);
+    }
+
+    public ResponseEntity<String> addStock(Long id, int stock){
+        Cart cart = cartRepository.findByCartId(id);
+        cart.setQuantity(cart.getQuantity() + stock);
+        cartRepository.save(cart);
+
+        return new ResponseEntity<>("New Stock Placed", HttpStatus.OK);
     }
 }

@@ -76,4 +76,27 @@ public class ProductService {
         return productRepository.findProductByName(name);
     }
 
+    public ResponseEntity<String> addStock(ProductRequest request){
+
+        Product product = productRepository.findProductByName(request.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found"));
+
+        product.setStock(product.getStock() + request.getStock());
+        productRepository.save(product);
+        return new ResponseEntity<>("Succcessfully add stock", HttpStatus.OK);
+    }
+
+    public Iterable<Product> findByType (int page, int size, String type, String sort){
+        Pageable pageable = PageRequest.of(page,size, Sort.by("id"));
+        if (sort.equalsIgnoreCase("desc")){
+            pageable = PageRequest.of(page,size, Sort.by("id").descending());
+        }
+        return productRepository.findProductByType(type, pageable);
+    }
+
+    public ResponseEntity<String> remove(Long id) {
+        productRepository.deleteById(id);
+        return new ResponseEntity<>("Product Removed", HttpStatus.OK);
+    }
+
 }
