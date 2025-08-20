@@ -19,6 +19,7 @@ public class OrderController {
 
     @PostMapping("/add-to-cart")
     public ResponseEntity<ResponseData<Cart>> addToCart(@RequestBody CartItemRequest request, Errors errors) {
+
         ResponseData<Cart> responseData = new ResponseData<>();
         if (errors.hasErrors()) {
             for (Object obj : errors.getAllErrors()) {
@@ -31,10 +32,33 @@ public class OrderController {
         return orderService.addToCart(request);
     }
 
+    @GetMapping("/{id}")
+    public Cart findById(@PathVariable("id") Long id){
+        return orderService.findOne(id);
+    }
+
+    @GetMapping("/all-cart")
+    public Iterable<Cart> findAll(){
+        return orderService.cartList();
+    }
+
+    @GetMapping("/all-cart/{size}/{page}/{sort}")
+    public Iterable<Cart> findWithPagedAndSorted(@PathVariable("page") int page,
+                                                 @PathVariable("size") int size,
+                                                 @PathVariable("sort") String sort){
+        return orderService.findWithPagedAndSorted(page, size, sort);
+    }
+
     @PostMapping("/place-order/{id}/{checkedOut}")
     public ResponseEntity<ResponseData<Order>> placeOrder(@PathVariable("id") Long id,
                                                           @PathVariable("checkedOut") String checkedOut) {
 
         return orderService.placeOrder(id, checkedOut);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> removeCart(@PathVariable("id") Long id){
+        return orderService.remove(id);
+    }
+
 }

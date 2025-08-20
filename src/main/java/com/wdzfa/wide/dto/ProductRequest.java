@@ -4,15 +4,23 @@ public class ProductRequest {
 
     private String name;
     private String type;
-    private double price;
-    private int stock;
+    private Double price;
+    private Integer stock;
 
-    public int getStock() {
+    public Integer getStock() {
         return stock;
     }
 
-    public void setStock(int stock) {
+    public void setStock(Integer stock) {
         this.stock = stock;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
     }
 
     public String getName() {
@@ -29,14 +37,6 @@ public class ProductRequest {
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
     }
 
 }

@@ -6,9 +6,13 @@ import com.wdzfa.wide.model.Cart;
 import com.wdzfa.wide.model.Order;
 import com.wdzfa.wide.model.Product;
 import com.wdzfa.wide.model.User;
+import com.wdzfa.wide.repository.CartPagingAndSortingRepository;
 import com.wdzfa.wide.repository.CartRepository;
 import com.wdzfa.wide.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,6 +27,9 @@ public class OrderService {
     private OrderRepository orderRepository;
 
     @Autowired
+    CartPagingAndSortingRepository cartPagingAndSortingRepository;
+
+    @Autowired
     CartRepository cartRepository;
 
     @Autowired
@@ -32,6 +39,7 @@ public class OrderService {
     private ProductService productService;
 
     public ResponseEntity<ResponseData<Cart>> addToCart(CartItemRequest request) {
+
         ResponseData<Cart> responseData = new ResponseData<>();
 
         Optional<User> userOptional = userService.findByName(request.getUserName());
@@ -42,10 +50,10 @@ public class OrderService {
         }
         User user = userOptional.get();
 
-        Optional<Product> productOptional = productService.findProductByType(request.getProductType());
+        Optional<Product> productOptional = productService.findProductByName(request.getProductName());
         if (productOptional.isEmpty()) {
             responseData.setStatus(false);
-            responseData.getMessage().add("Product not found for type: " + request.getProductType());
+            responseData.getMessage().add("Product not found: " + request.getProductName());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseData);
         }
         Product product = productOptional.get();
@@ -56,29 +64,93 @@ public class OrderService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseData);
         }
 
-        // Calculate total price
+        Iterable<Cart> allCarts = this.cartList();
+        int totalQuantityInCart = 0;
+        for (Cart cart : allCarts) {
+            if (cart.getProduct().getId().equals(product.getId())) {
+                totalQuantityInCart += cart.getQuantity();
+            }
+        }
+
+        if (totalQuantityInCart + request.getQuantity() > product.getStock()) {
+            responseData.setStatus(false);
+            responseData.getMessage().add("Not enough stock available");
+            return ResponseEntity.badRequest().body(responseData);
+        }
+
+        Optional<Cart> optionalCart = cartRepository.findCartByUserAndProduct(user, product);
+
         double totalCalculatedPrice = product.getPrice() * request.getQuantity();
 
-        Cart cart = new Cart();
+        Cart cart;
+
+//        if (optionalCart.isPresent()) {
+//            cart = optionalCart.get();
+//
+//            // Check stock before updating
+//            int updateStock = cart.getQuantity() + request.getQuantity();
+//
+//            if (updateStock > product.getStock()) {
+//                responseData.setStatus(false);
+//                responseData.getMessage().add("Remaining stock:" + cart.getQuantity());
+//                return ResponseEntity.badRequest().body(responseData);
+//            }
+//
+//            // Update existing cart
+//            cart.setQuantity(cart.getQuantity() + request.getQuantity());
+//            cart.setTotalPrice(product.getPrice() * cart.getQuantity());
+//            cart.setOrderDate(LocalDateTime.now());
+//
+//        } else {
+//            // Create new cart
+//            cart = new Cart();
+//            cart.setUser(user);
+//            cart.setProduct(product);
+//            cart.setQuantity(request.getQuantity());
+//            cart.setTotalPrice(totalCalculatedPrice);
+//            cart.setOrderDate(LocalDateTime.now());
+//            cart.setPlaceOrder("false");
+//        }
+
+        cart = new Cart();
         cart.setUser(user);
         cart.setProduct(product);
         cart.setQuantity(request.getQuantity());
         cart.setTotalPrice(totalCalculatedPrice);
         cart.setOrderDate(LocalDateTime.now());
         cart.setPlaceOrder("false");
-        Cart savedOrder = cartRepository.save(cart);
+
+        cartRepository.save(cart);
 
         responseData.setStatus(true);
-        responseData.getMessage().add("Order placed successfully!");
-        responseData.setPayload(savedOrder);
+        responseData.getMessage().add("Cart updated successfully");
+        responseData.setPayload(cart);
         return ResponseEntity.ok(responseData);
+
     }
 
-    public ResponseEntity<ResponseData<Order>> placeOrder(Long id, String checkOut){
+    public Cart findOne(Long id) {
+        Optional<Cart> cart = cartRepository.findById(id);
+        return cart.get();
+    }
+
+    public Iterable<Cart> cartList() {
+        return cartRepository.findAll();
+    }
+
+    public Iterable<Cart> findWithPagedAndSorted(int page, int size, String sort) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id"));
+        if (sort.equalsIgnoreCase("desc")) {
+            pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        }
+        return cartPagingAndSortingRepository.findAll(pageable);
+    }
+
+    public ResponseEntity<ResponseData<Order>> placeOrder(Long id, String checkOut) {
 
         ResponseData<Order> responseData = new ResponseData<>();
 
-        Cart cart  = cartRepository.findByCartId(id);
+        Cart cart = cartRepository.findByCartId(id);
         if (checkOut == null || checkOut.equalsIgnoreCase("false")) {
             responseData.setStatus(false);
             responseData.getMessage().add("Order not placed because: " + checkOut + " mean you don't want to check out product");
@@ -86,6 +158,13 @@ public class OrderService {
         }
 
         Product deductProduct = productService.findOne(cart.getProduct().getId());
+
+        if (deductProduct.getStock() < cart.getQuantity()) {
+            responseData.setStatus(false);
+            responseData.getMessage().add("Insufficient stock for product: " + deductProduct.getName() + ". Available stock: " + deductProduct.getStock());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseData);
+        }
+
         deductProduct.setStock(deductProduct.getStock() - cart.getQuantity());
         productService.create(deductProduct);
 
@@ -104,6 +183,8 @@ public class OrderService {
         return ResponseEntity.ok(responseData);
     }
 
-    public void remove(Long id){
+    public ResponseEntity<String> remove(Long id) {
         cartRepository.deleteById(id);
-    }}
+        return new ResponseEntity<>("Cart Removed", HttpStatus.OK);
+    }
+}

@@ -2,8 +2,24 @@ package com.wdzfa.wide.dto;
 
 public class CartItemRequest {
     private String userName;
-    private String productType;
-    private int quantity;
+    private String productName;
+    private Integer quantity;
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
 
     public String getUserName() {
         return userName;
@@ -13,19 +29,6 @@ public class CartItemRequest {
         this.userName = userName;
     }
 
-    public String getProductType() {
-        return productType;
-    }
 
-    public void setProductType(String productType) {
-        this.productType = productType;
-    }
 
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
 }

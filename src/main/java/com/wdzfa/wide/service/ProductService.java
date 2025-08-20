@@ -55,17 +55,25 @@ public class ProductService {
         Product product = productRepository.findProductByName(request.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found"));
 
-        product.setName(request.getName());
-        product.setPrice(request.getPrice());
-        product.setStock(request.getStock());
-        product.setType(request.getType());
+        if (request.getType() != null){
+            product.setType(request.getType());
+        }
+
+        if (request.getPrice() != null){
+            product.setPrice(request.getPrice());
+        }
+
+        if (request.getStock() != null){
+            product.setStock(request.getStock());
+        }
+
         productRepository.save(product);
         return new ResponseEntity<>("Successfully update", HttpStatus.OK);
 
     }
 
-    public Optional<Product> findProductByType(String type) {
-        return productRepository.findProductByType(type);
+    public Optional<Product> findProductByName(String name) {
+        return productRepository.findProductByName(name);
     }
 
 }
