@@ -6,6 +6,7 @@ import com.wdzfa.wide.repository.ProductPagingAndSortingRepository;
 import com.wdzfa.wide.repository.ProductRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -86,11 +87,13 @@ public class ProductService {
         return new ResponseEntity<>("Succcessfully add stock", HttpStatus.OK);
     }
 
-    public Iterable<Product> findByType (int page, int size, String type, String sort){
+    public Page<Product> findByType (int page, int size, String type, String sort){
+
         Pageable pageable = PageRequest.of(page,size, Sort.by("id"));
-        if (sort.equalsIgnoreCase("desc")){
-            pageable = PageRequest.of(page,size, Sort.by("id").descending());
+        if (sort.equalsIgnoreCase("desc")) {
+            pageable = PageRequest.of(page, size, Sort.by("id").descending());
         }
+
         return productRepository.findProductByType(type, pageable);
     }
 

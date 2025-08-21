@@ -5,6 +5,7 @@ import com.wdzfa.wide.dto.ResponseData;
 import com.wdzfa.wide.model.Cart;
 import com.wdzfa.wide.model.Order;
 import com.wdzfa.wide.service.OrderService;
+import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -65,6 +66,14 @@ public class OrderController {
     public ResponseEntity<String> addStock(@PathVariable("id") Long id,
                                            @PathVariable("stock") int stock){
         return orderService.addStock(id,stock);
+    }
+
+    @GetMapping("/all-cart/{size}/{page}/{name}/{sort}")
+    public Iterable<Cart> findAllCartUser(@PathVariable("page") int page,
+                                          @PathVariable("size") int size,
+                                          @PathVariable("name") String name,
+                                          @PathVariable("sort") String sort){
+        return orderService.findAllCartEveryUser(page,size,name,sort);
     }
 
 }

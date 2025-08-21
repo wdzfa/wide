@@ -10,6 +10,7 @@ import com.wdzfa.wide.repository.CartPagingAndSortingRepository;
 import com.wdzfa.wide.repository.CartRepository;
 import com.wdzfa.wide.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -146,7 +147,7 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
         responseData.setStatus(true);
-        responseData.getMessage().add("Order Place Successfully");
+        responseData.getMessage().add("Order Placed Successfully");
         responseData.setPayload(savedOrder);
         remove(cart.getId());
         return ResponseEntity.ok(responseData);
@@ -163,5 +164,18 @@ public class OrderService {
         cartRepository.save(cart);
 
         return new ResponseEntity<>("New Stock Placed", HttpStatus.OK);
+    }
+
+    public Page<Cart> findAllCartEveryUser(int page, int size, String name, String sort){
+
+        Pageable pageable = PageRequest.of(page,size,Sort.by("id"));
+        if (sort.equalsIgnoreCase("desc")){
+            pageable = PageRequest.of(page,size,Sort.by("id").descending());
+        }
+
+        User user = userService.findByName(name)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return cartRepository.findAllCartUser(user,pageable);
     }
 }

@@ -5,9 +5,9 @@ import jakarta.websocket.server.PathParam;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-
-import java.util.List;
+import org.springframework.data.repository.query.Param;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
 
 public interface ProductRepository extends CrudRepository<Product, Long> {
 
@@ -16,6 +16,7 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     Optional<Product> findProductByName(@PathParam("name") String name);
 
     @Query("SELECT p FROM Product p WHERE LOWER(p.type) = LOWER(:type)")
-    List<Product> findProductByType(@PathParam("type") String type, Pageable pageable);
+    Page<Product> findProductByType(@Param("type") String type, Pageable pageable);
+
 
 }
