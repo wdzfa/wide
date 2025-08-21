@@ -81,14 +81,37 @@ public class OrderService {
 
         double totalCalculatedPrice = product.getPrice() * request.getQuantity();
 
+        Optional<Cart> optionalCart = cartRepository.findCartByUserAndProduct(user, product);
+
         Cart cart;
-        cart = new Cart();
-        cart.setUser(user);
-        cart.setProduct(product);
-        cart.setQuantity(request.getQuantity());
-        cart.setTotalPrice(totalCalculatedPrice);
-        cart.setOrderDate(LocalDateTime.now());
-        cart.setPlaceOrder("false");
+
+        if (optionalCart.isPresent()) {
+            cart = optionalCart.get();
+
+            // Check stock before updating
+            int updateStock = cart.getQuantity() + request.getQuantity();
+
+            if (updateStock > product.getStock()) {
+                responseData.setStatus(false);
+                responseData.getMessage().add("Remaining stock:" + cart.getQuantity());
+                return ResponseEntity.badRequest().body(responseData);
+            }
+
+            // Update existing cart
+            cart.setQuantity(cart.getQuantity() + request.getQuantity());
+            cart.setTotalPrice(product.getPrice() * cart.getQuantity());
+            cart.setOrderDate(LocalDateTime.now());
+
+        } else {
+            // Create new cart
+            cart = new Cart();
+            cart.setUser(user);
+            cart.setProduct(product);
+            cart.setQuantity(request.getQuantity());
+            cart.setTotalPrice(totalCalculatedPrice);
+            cart.setOrderDate(LocalDateTime.now());
+            cart.setPlaceOrder("false");
+        }
 
         cartRepository.save(cart);
 
