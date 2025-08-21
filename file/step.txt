@@ -1,0 +1,6 @@
+1. Create database wide
+	psql -U postgres
+	CREATE DATABASE wide;
+2. setup password pada application.properties jika ada, kosongkan jika tidak ada password
+3. run application
+
