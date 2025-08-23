@@ -1,14 +1,18 @@
 package com.wdzfa.wide.controller;
 
+import com.wdzfa.wide.dto.AuthRequest;
 import com.wdzfa.wide.dto.ResponseData;
 import com.wdzfa.wide.dto.UserRequest;
 import com.wdzfa.wide.model.User;
 import com.wdzfa.wide.service.UserService;
+import com.wdzfa.wide.service.jwt.JwtService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.Errors;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,21 +28,32 @@ public class UserController {
     @Autowired
     ModelMapper modelMapper;
 
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtService jwtService;
+
     @PostMapping("/register")
-    public ResponseEntity<ResponseData<User>> register(@RequestBody UserRequest request, Errors errors){
+    public ResponseEntity<ResponseData<User>> register(@RequestBody UserRequest request) {
+        ResponseData<User> response = userService.register(request);
+        return ResponseEntity.ok(response);
+    }
 
-        ResponseData<User> responseData = new ResponseData<>();
-        if (errors.hasErrors()){
-            for (Object object: errors.getAllErrors()){
-                responseData.setStatus(false);
-                responseData.getMessage().add("User already registered");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseData);
-            }
+    @PostMapping("/login")
+    public ResponseEntity<ResponseData<String>> login(@RequestBody UserRequest request) {
+        ResponseData<String> response = userService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/generateToken")
+    public String authenticateAndGetToken (@RequestBody AuthRequest request) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(),
+                                        request.getPassword()));
+        if (authentication.isAuthenticated()){
+            return jwtService.generateToken(request.getEmail());
+        } else {
+            throw new UsernameNotFoundException("Invalid user request!");
         }
-
-        User user = modelMapper.map(request,User.class);
-        responseData.setStatus(true);
-        responseData.setPayload(userService.register(user));
-        return ResponseEntity.ok(responseData);
     }
 }

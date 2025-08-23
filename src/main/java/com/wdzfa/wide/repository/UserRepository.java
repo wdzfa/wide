@@ -11,4 +11,9 @@ public interface UserRepository extends CrudRepository<User, Long> {
     @Query("SELECT p FROM User p WHERE LOWER(p.name) = LOWER(:name)")
     Optional<User> findUserByName(@PathParam("name") String name);
 
+    Optional<User> findByEmail(String email);
+
+    User findByRefreshToken(String refreshToken);
+
+
 }
